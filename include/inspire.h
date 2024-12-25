@@ -32,16 +32,14 @@ public:
 
 
   /**
-   * @brief 设置各自由度的位置
-   * -1: 不变
-   * [0, 1] 0: 闭合
-   * 小拇指、无名指、中指、食指、大拇指弯曲、大拇指旋转
+   * @brief Set the finger position
+   * -1: no change
+   * [0, 1] 0: close
+   * ID: pinky, ring, middle, index, thumb_bend, thumb_rotate
    */
   int16_t SetPosition(const Eigen::Matrix<double, 6, 1> & q)
   {
-    // 将q限制在0到1
     Eigen::Matrix<int16_t, 6, 1> q_int16 = (q * 1000).cast<int16_t>().cwiseMax(0).cwiseMin(1000);
-
 
     uint8_t cmd[20];
     cmd[0] = 0xEB;    // head
@@ -74,9 +72,9 @@ public:
   }
 
   /**
-   * @brief 读取当前各自由度的角度位置
+   * @brief Get the finger position
    * 
-   * 小拇指、无名指、中指、食指、大拇指弯曲、大拇指旋转
+   * ID: pinky, ring, middle, index, thumb_bend, thumb_rotate
    */
   int16_t GetPosition(Eigen::Matrix<double, 6, 1> & q)
   {
@@ -101,9 +99,7 @@ public:
   }
 
   /**
-   * @brief 设置各自由度的速度
-   * 
-   * 设置完速度后会立即生效，断电再上电不保存。
+   * @brief Set the finger velocity
    */
   void SetVelocity(int16_t v0, int16_t v1, int16_t v2, int16_t v3, int16_t v4, int16_t v5)
   {
@@ -137,7 +133,7 @@ public:
   }
 
   /**
-   * @brief 各自由度的力控阈值设置值
+   * @brief Get the force control threshold
    * 
    * [0, 1000] Unit: g
    */
@@ -173,9 +169,9 @@ public:
   }
 
   /**
-   * @brief 各手指的实际受力
+   * @brief Get the force of each finger
    * 
-   * 原本单位为 g, [0 - 1000], 转为 N
+   * The force is in the unit of g, [0 - 1000], convert to N
    */
   int16_t GetForce(Eigen::Matrix<double, 6, 1> & f)
   {
@@ -200,9 +196,10 @@ public:
   }
 
   /**
-   * @brief 清除错误
+   * @brief Clear error
    * 
-   * 当灵巧手发生堵转，过流，异常等故障可通过清除故障指令恢复正常运行
+   * When the Inspire Hand has a fault such as a stall, overcurrent, or abnormality, 
+   * the fault can be cleared by the clear fault command.
    */
   void ClearError()
   {
@@ -223,9 +220,9 @@ public:
   }
 
   /**
-   * @brief 受力传感器校准
+   * @brief Force sensor calibration
    * 
-   * 校准时需保证灵巧手处于空载状态
+   * @attention The Inspire Hand must be in an unloaded state during calibration
    */
   void Calibration()
   {
@@ -234,11 +231,9 @@ public:
     serial_->send(cmd.data(), cmd.size());
 
     usleep(5000);
-    serial_->recv(recvBuff, 9); // 第一帧
-    sleep(10); // 整个过程大约需要6s
-    serial_->recv(recvBuff, 9); // 第二帧
-    std::cout << "Calibration: ";
-    print_data(recvBuff, 9);
+    serial_->recv(recvBuff, 9); // First frame
+    sleep(10); // The calibration process takes about 6 seconds
+    serial_->recv(recvBuff, 9); // Second frame
   }
 
   uint8_t id = 1;
@@ -246,7 +241,6 @@ private:
   uint8_t CheckSum(const uint8_t* data, uint8_t len)
   {
     uint8_t sum = 0;
-    // 除应答帧头外其余数据的累加和的低字节
     for (int i = 2; i < len - 1; i++)
     {
       sum += data[i];

@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.10)
-project(h1_inspire_service VERSION 0.1.0)
+project(h1_inspire_service)
 
 if(NOT CMAKE_BUILD_TYPE)
   set(CMAKE_BUILD_TYPE Debug)
@@ -22,9 +22,9 @@ include_directories(
 )
 
 link_libraries(unitree_sdk2 ddsc ddscxx rt pthread)
-link_libraries(unitree_idl libboost_program_options.a)
+link_libraries(libboost_program_options.a)
 
 add_executable(inspire_hand inspire_ctrl.cpp)
 
 # example
-add_executable(h1_hand_example example/inspire_hand.cpp)
+add_executable(h1_hand_example example/h1_hand_example.cpp)

@@ -14,15 +14,6 @@
 #include <chrono>
 #include <queue>
 
-void print_data(const uint8_t* data, uint8_t len)
-{
-  for (int i = 0; i < len; i++)
-  {
-    printf("%02x ", data[i]);
-  }
-  printf("\n");
-}
-
 class SerialPort
 {
 public:
@@ -41,9 +32,7 @@ public:
 
   ssize_t send(const uint8_t* data, size_t len)
   {
-    // tcflush(fd_, TCIFLUSH);
     ssize_t ret = ::write(fd_, data, len);
-    // tcdrain(fd_);
     return ret;
   }
 
@@ -67,36 +56,6 @@ public:
     }
 
     return recv_len;
-  }
-
-  void recv(uint8_t* data, uint8_t head, ssize_t len)
-  {
-    // 存入队列
-    ssize_t recv_len = this->recv(recv_buf.data(), len);
-    for (int i = 0; i < recv_len; i++)
-    {
-      recv_queue.push(recv_buf[i]);
-    }
-
-    // 查找帧头
-    while (recv_queue.size() >= len)
-    {
-      if(recv_queue.front() != head)
-      {
-        recv_queue.pop();
-        continue;
-      }
-      break;
-    }
-
-    if(recv_queue.size() < len) return;
-
-    // 读取数据
-    for(int i = 0; i < len; i++)
-    {
-      data[i] = recv_queue.front();
-      recv_queue.pop();
-    }
   }
 
   void set_timeout(int timeout_ms)
